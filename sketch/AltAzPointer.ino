@@ -32,7 +32,7 @@
  *  Note: This controller has no security, so don't expose to Internet unless you
  *  don't mind someone playing with your servos! 
  *  
- *  Version 1.0 2015.12.13 R. Grokett
+ *  Version 1.1 2015.12.13 R. Grokett
  *  - Initial 
  */
 
@@ -154,7 +154,7 @@ void loop() {
       respMsg = "ERROR: servo out of range 0 to 90";
     } else {      
       myservo.write(az);
-      respMsg = "OK: AZIMUTH = "+String(az);
+      respMsg = "OK: ALTITUDE = "+String(az);
     }
   }
   // CONTROL STEPPER
