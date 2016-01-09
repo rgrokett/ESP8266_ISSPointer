@@ -23,7 +23,7 @@
 # Usage:
 # $ sudo nohup python -u ./isspointer.py &
 #
-# Version 1.2 2016.01.07
+# Version 1.3 2016.01.09
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
 
@@ -50,7 +50,7 @@ LON = -81.8	# Your Longitude (+E) deg
 ELV = 11.0	# Elevation at your location (meters)
 
 # FOR ALT/AZ POINTER 
-STEPIP = "http://192.168.X.X/" # IP Address of YOUR ESP8266 AltAZ Pointer
+STEPIP = "http://192.168.1.82/" # IP Address of YOUR ESP8266 AltAZ Pointer
 STEPS  = 200    # Replace with your stepper (steps per one revolution)
 
 AUDIO = 1	# 0 off 1 on
@@ -128,6 +128,12 @@ def getTLE():
 # CONTROL LED
 def doLED(state):
     ledUrl = STEPIP
+    # TEMPY FLIP on/off
+    if (state == 'on'):
+        state = 'off'   # means turn on led
+    else:
+        state = 'on'    # means turn off led
+    #
     try:
         cmd = ledUrl+"led/"+str(state)
         resp = urllib2.urlopen(cmd)
@@ -365,8 +371,7 @@ if __name__ == '__main__':
         else:
             if INFO:
                 print "ISS below horizon"
-            if (glob_azReset > 0):
-                doAzReset()
+            doAzReset()
 	    next_visible(tr)
 	    next_check = 60
 
