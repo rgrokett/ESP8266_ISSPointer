@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # ISS FLYOVER DETECTION
 # This program is part of the ISSPointer:
-#	https://github.com/rgrokett/ISSPointer
+#	https://github.com/rgrokett/ESP8266_ISSPointer
 # It runs on a Linux server such as a Raspberry Pi with network connection
 # It requires the AltAzPointer project: 
 #	http://www.instructables.com/id/ESP8266-ISSPointer
@@ -15,7 +15,7 @@
 # Usage:
 # nohup python -u ./isspointer.py &
 #
-# Version 0.5 2016.01.01
+# Version 0.7 2016.01.16
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
 
@@ -45,7 +45,7 @@ LON = -81.8	# Your Longitude (+E) deg
 ELV = 11.0	# Elevation at your location (meters)
 
 # FOR ALT/AZ POINTER 
-STEPIP = "http://192.168.X.X/" # IP Address of YOUR ESP8266 AltAZ Pointer
+STEPIP = "http://192.168.1.82/" # IP Address of YOUR ESP8266 AltAZ Pointer
 STEPS  = 200    # Replace with your stepper (steps per one revolution)
 
 ########### END OF USER VARIABLES
@@ -99,18 +99,21 @@ def doStepper(steps):
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/rpm?10"
        resp = urllib2.urlopen(cmd)
        if DEBUG:
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/steps?"+str(steps)
        resp = urllib2.urlopen(cmd)
        if DEBUG:
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/stop"
        resp = urllib2.urlopen(cmd)
        if DEBUG:
@@ -161,7 +164,8 @@ def doAzReset():
         doStepper(-steps)
         glob_azReset = 0
         doServo(0)
-    doLED('off')
+        doLED('off')
+    return
 
 
 def exit():
@@ -220,7 +224,8 @@ if __name__ == '__main__':
 	# FIND NEXT PASS INFO JUST FOR REFERENCE
         tr, azr, tt, altt, ts, azs = site.next_pass(iss)
 
-        duration = int((ts - tr) *60*60*24)
+	if (ts > tr):
+	    duration = int((ts - tr) *60*60*24)
 
         print("Next Pass (Localtime): %s" % ephem.localtime(tr))
         if INFO:
@@ -273,8 +278,7 @@ if __name__ == '__main__':
         else:
             if INFO:
                 print "ISS below horizon"
-            if (glob_azReset > 0):
-                doAzReset()
+            doAzReset()
 	    next_check = 60
 
         time.sleep(next_check)
