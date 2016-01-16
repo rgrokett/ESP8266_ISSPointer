@@ -23,7 +23,7 @@
 # Usage:
 # $ sudo nohup python -u ./isspointer.py &
 #
-# Version 1.3 2016.01.09
+# Version 1.4 2016.01.11 - added extra error handling
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
 
@@ -158,18 +158,21 @@ def doStepper(steps):
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/rpm?10"
        resp = urllib2.urlopen(cmd)
        if DEBUG:
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/steps?"+str(steps)
        resp = urllib2.urlopen(cmd)
        if DEBUG:
            print (cmd)
            print resp.read()
        resp.close()
+       time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/stop"
        resp = urllib2.urlopen(cmd)
        if DEBUG:
@@ -178,13 +181,15 @@ def doStepper(steps):
        resp.close()
        time.sleep(0.1) # keep from overflowing ESP wifi buffer
     except:
-       time.sleep(5)
+       print "Unexpected doStepper() error:", sys.exc_info()[0]
+       time.sleep(1)
        try:
            cmd = stepperUrl+"stepper/stop"
            resp = urllib2.urlopen(cmd)
            print (cmd)
            print resp.read()
            resp.close()
+           time.sleep(0.1) # keep from overflowing ESP wifi buffer
        except:
            print "Stepper comm failure"
     return
@@ -221,7 +226,8 @@ def doAzReset():
         doStepper(-steps)
         glob_azReset = 0
         doServo(0)
-    doLED('off')
+        doLED('off')
+    return
 
 
 def exit():
@@ -337,7 +343,7 @@ if __name__ == '__main__':
 		    print "ISS IS OVERHEAD"
 		lcd.message("ISS IS OVERHEAD")
 		flash_display()
-		if (not isQuiet):
+		if (not isQuiet()):
 		    if (altDeg > int(60)):
 		        sound(4)
 		    else:
