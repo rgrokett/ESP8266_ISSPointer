@@ -128,12 +128,6 @@ def getTLE():
 # CONTROL LED
 def doLED(state):
     ledUrl = STEPIP
-    # TEMPY FLIP on/off
-    if (state == 'on'):
-        state = 'off'   # means turn on led
-    else:
-        state = 'on'    # means turn off led
-    #
     try:
         cmd = ledUrl+"led/"+str(state)
         resp = urllib2.urlopen(cmd)
