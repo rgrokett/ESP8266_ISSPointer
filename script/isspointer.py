@@ -194,6 +194,8 @@ if __name__ == '__main__':
     # This is to allow getting the TLE after restarts
     pt = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     
+    duration = 0        # Duration of a flyover in seconds
+
     while True:
 
 	print "\n"
