@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # ISS FLYOVER DETECTION
 # LCD DISPLAY & SOUND VERSION FOR RASPBERRY PI
@@ -17,51 +17,70 @@
 # Install Adafruit LCD lib & dependencies from 
 #    https://github.com/adafruit/Adafruit_Python_CharLCD
 # Also install:
-# $ sudo apt-get install python-pip python-dev
-# $ sudo pip install pyephem
+# $ sudo apt-get install python3-pip python3-dev
+# $ sudo pip3 install pyephem
 #
 # Usage:
-# $ sudo nohup python -u ./isspointer.py &
+# $ sudo nohup python3 -u ./isspointer.py &
 #
 # Version 1.4 2016.01.11 - added extra error handling
+# Version 2.0 2019.06.16 - Python3 update
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
 
+try:
+   import ephem
+except Exception as ex:
+   print("Requires sudo pip3 install pyephem")
+   exit()
+
 import subprocess
-import ephem    
 import calendar
 import datetime
 import time
 import math
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import socket
 import atexit
 import sys
 
-from Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
+LCD = 0 # Default to no LCD
+try:
+    import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
+    import board
+    import busio
+    lcd_columns = 16
+    lcd_rows = 2
+    i2c = busio.I2C(board.SCL, board.SDA)
+    lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
+    LCD = 1
+except Exception as ex:
+    print("No LCD Display Found. Ignored...")
+    print(ex)
+    
 
 ############ USER VARIABLES
 DEBUG = 1       # 0 off 1 on
 INFO  = 1       # Display ephemeris info 
 
 # YOUR LOCATION
-LAT = 30.1	# Your Latitude (+N) deg
-LON = -81.8	# Your Longitude (+E) deg
-ELV = 11.0	# Elevation at your location (meters)
+LAT = 30.1  # Your Latitude (+N) deg
+LON = -81.8 # Your Longitude (+E) deg
+ELV = 11.0  # Elevation at your location (meters)
 
 # FOR ALT/AZ POINTER 
-STEPIP = "http://192.168.1.82/" # IP Address of YOUR ESP8266 AltAZ Pointer
+STEPIP = "http://192.168.X.X/" # IP Address of YOUR ESP8266 AltAZ Pointer
 STEPS  = 200    # Replace with your stepper (steps per one revolution)
 
-AUDIO = 1	# 0 off 1 on
-QUIET = [ 00, 07 ] # Don't play audio between midnight & 7:59AM
+AUDIO = 1 # 0 off 1 on
+QUIET = [ 00, 0o7 ] # Don't play audio between midnight & 7:59AM
 PATH = "/home/pi/sounds/"  # Path to Sound files
 
 ########### END OF USER VARIABLES
 
 # Global Consts
 FLOAT_A = float(STEPS)/360.0
-HOR = 10.0	# Default to 10 degrees above horizon before being "visible"
+HOR = 10.0  # Default to 10 degrees above horizon before being "visible"
 TLE = "https://api.wheretheiss.at/v1/satellites/25544/tles?format=text"
 SOUND = [ 0, "2001buzz.wav","2001ping.wav","2001function.wav","2001alarm.wav" ]
 
@@ -79,27 +98,28 @@ def sound(val): # Play a sound
     return
 
 def isQuiet():  # Quiet time no sound
-	if AUDIO:
-            hour = time.strftime('%H')
-            if int(hour) >= QUIET[0] and int(hour) < QUIET[1]:
-                return(1)
-            else:
-                return(0)
-	return(1)
+  if AUDIO:
+    hour = time.strftime('%H')
+    if int(hour) >= QUIET[0] and int(hour) < QUIET[1]:
+         return(1)
+    else:
+         return(0)
+  return(1)
 
-def next_visible(risetime):	# LCD Display dates/times
-        lcd.backlight(lcd.ON)
-        lcd.clear()
+def next_visible(risetime): # LCD Display dates/times
         lt = ephem.localtime(risetime)
-	lt = lt.replace(microsecond=0)
+        lt = lt.replace(microsecond=0)
         dt = datetime.datetime.strptime(str(lt), "%Y-%m-%d %H:%M:%S")
         v = dt.strftime('%m/%d %X')
         c = time.strftime('%m/%d %X')
-        lcd.message("NEXT:" + v)
-        lcd.message("\n")
-        lcd.message("Time:" + c)
+        if LCD:
+          lcd.backlight(lcd.ON)
+          lcd.clear()
+          lcd.message("NEXT:" + v)
+          lcd.message("\n")
+          lcd.message("Time:" + c)
 
-def flash_display():		# LCD Display flash
+def flash_display():    # LCD Display flash
         lcd.backlight(lcd.OFF)
         time.sleep(0.2)
         lcd.backlight(lcd.ON)
@@ -116,13 +136,15 @@ def flash_display():		# LCD Display flash
 def getTLE():
     global glob_tle
     try:
-        resp = urllib2.urlopen(TLE)
-	glob_tle = resp.read().split('\n')
-	if DEBUG:
-	   print (glob_tle)
-    except:
-        print "ERROR: Cannot retrieve coordinate data, retrying..."
-	time.sleep(60)
+        resp = urllib.request.urlopen(TLE)
+        glob_tle = resp.read().decode('utf-8').split('\n')
+        if DEBUG:
+          print (glob_tle)
+    except Exception as ex:
+        print("ERROR: Cannot retrieve coordinate data, retrying...")
+        if DEBUG:
+          print(ex)
+        time.sleep(60)
     return
 
 # CONTROL LED
@@ -130,14 +152,14 @@ def doLED(state):
     ledUrl = STEPIP
     try:
         cmd = ledUrl+"led/"+str(state)
-        resp = urllib2.urlopen(cmd)
+        resp = urllib.request.urlopen(cmd)
         if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
         resp.close()
         time.sleep(0.1) # keep from overflowing ESP wifi buffer
     except:
-        print "ERROR: LED comm failure"
+        print("ERROR: LED comm failure")
     return
 
 # CONTROL AZIMUTH STEPPER MOTOR
@@ -147,45 +169,45 @@ def doStepper(steps):
     try:
        stepperUrl = STEPIP
        cmd = stepperUrl+"stepper/start"
-       resp = urllib2.urlopen(cmd)
+       resp = urllib.request.urlopen(cmd)
        if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
        resp.close()
        time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/rpm?10"
-       resp = urllib2.urlopen(cmd)
+       resp = urllib.request.urlopen(cmd)
        if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
        resp.close()
        time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/steps?"+str(steps)
-       resp = urllib2.urlopen(cmd)
+       resp = urllib.request.urlopen(cmd)
        if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
        resp.close()
        time.sleep(0.1) # keep from overflowing ESP wifi buffer
        cmd = stepperUrl+"stepper/stop"
-       resp = urllib2.urlopen(cmd)
+       resp = urllib.request.urlopen(cmd)
        if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
        resp.close()
        time.sleep(0.1) # keep from overflowing ESP wifi buffer
     except:
-       print "Unexpected doStepper() error:", sys.exc_info()[0]
+       print("Unexpected doStepper() error:", sys.exc_info()[0])
        time.sleep(1)
        try:
            cmd = stepperUrl+"stepper/stop"
-           resp = urllib2.urlopen(cmd)
+           resp = urllib.request.urlopen(cmd)
            print (cmd)
-           print resp.read()
+           print(resp.read())
            resp.close()
            time.sleep(0.1) # keep from overflowing ESP wifi buffer
        except:
-           print "Stepper comm failure"
+           print("Stepper comm failure")
     return
 
 # CONTROL ALTITUDE SERVO
@@ -197,14 +219,14 @@ def doServo(angle):
     servoUrl = STEPIP
     try:
         cmd = servoUrl+"servo/value?"+str(angle)
-        resp = urllib2.urlopen(cmd)
+        resp = urllib.request.urlopen(cmd)
         if DEBUG:
            print (cmd)
-           print resp.read()
+           print(resp.read())
         resp.close()
         time.sleep(0.1) # keep from overflowing ESP wifi buffer
     except:
-        print "Servo comm failure"
+        print("Servo comm failure")
 
 # CONTROL RESET TO NORTH & LEVEL POSITION
 def doAzReset():
@@ -213,7 +235,7 @@ def doAzReset():
     global glob_azReset
     glob_azOld   = 0
     if DEBUG:
-        print ("doAzReset("+str(glob_azReset)+")")
+        print(("doAzReset("+str(glob_azReset)+")"))
     if (glob_azReset != 0):
         steps = glob_azReset
         time.sleep(0.2)
@@ -247,38 +269,39 @@ if __name__ == '__main__':
     timeout = 10
     socket.setdefaulttimeout(timeout)
 
-    lcd = Adafruit_CharLCDPlate()
-    lcd.clear()
-    lcd.backlight(lcd.ON)
+    if LCD:
+      #lcd = Adafruit_CharLCDPlate()
+      lcd.clear()
+      lcd.backlight(lcd.ON)
+      lcd.message("ISS STARTUP")
+      flash_display()
     sound(3)
-    lcd.message("ISS STARTUP")
-    flash_display()
     time.sleep(3)
-    lcd.clear()
+    if LCD:
+      lcd.clear()
 
     if DEBUG:
-        print "DEBUG MODE"
+        print("DEBUG MODE")
 
     # This is to allow getting the TLE after restarts
     pt = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
 
-    duration = 0	# Duration of a flyover in seconds
+    duration = 0  # Duration of a flyover in seconds
     
     while True:
 
-	print "\n"
-	print "ISS PASS INFO"
+      print("\n")
+      print("ISS PASS INFO")
 
-	# Get TLE Info only every 20 minutes
-	# just left math for clarity, not speed
-	ct = datetime.datetime.utcnow()
-        next_seconds = int((ct - pt).total_seconds())
-	if DEBUG:
-	    print ("Seconds since last TLE check: %s" % next_seconds)
-	if (next_seconds > (20 * 60)):
-            getTLE()    
-	    pt = ct
-
+      # Get TLE Info only every 20 minutes
+      # just left math for clarity, not speed
+      ct = datetime.datetime.utcnow()
+      next_seconds = int((ct - pt).total_seconds())
+      if DEBUG:
+          print(("Seconds since last TLE check: %s" % next_seconds))
+      if (next_seconds > (20 * 60)):
+        getTLE()    
+        pt = ct
         iss = ephem.readtle(glob_tle[0], glob_tle[1], glob_tle[2]);
         site = ephem.Observer()
         site.date = datetime.datetime.utcnow()
@@ -289,99 +312,103 @@ if __name__ == '__main__':
         site.pressure = 0
 
         lt = ephem.localtime(site.date)
-	lt = lt.replace(microsecond=0)
-        print "Current UTC time    : %s" % site.date
-        print "Current Local time  : %s" % lt
+        lt = lt.replace(microsecond=0)
+        print("Current UTC time    : %s" % site.date)
+        print("Current Local time  : %s" % lt)
     
-	# FIND NEXT PASS INFO JUST FOR REFERENCE
+        # FIND NEXT PASS INFO JUST FOR REFERENCE
         tr, azr, tt, altt, ts, azs = site.next_pass(iss)
 
-	if (ts > tr):
-	    duration = int((ts - tr) *60*60*24)
-
+      if (ts > tr):
+        duration = int((ts - tr) *60*60*24)
         lt = ephem.localtime(tr)
-	lt = lt.replace(microsecond=0)
-        print("Next Pass Local time: %s" % lt)
-	print ""
+        lt = lt.replace(microsecond=0)
+        print(("Next Pass Local time: %s" % lt))
+        print("")
         if INFO:
-            print("UTC Rise Time   : %s" % tr)
-            print("UTC Max Alt Time: %s" % tt)
-            print("UTC Set Time    : %s" % ts)
-            print("Rise Azimuth: %s" % azr)
-            print("Set Azimuth : %s" % azs)
-            print("Max Altitude: %s" % altt)
-            print("Duration    : %s" % duration)
+            print(("UTC Rise Time   : %s" % tr))
+            print(("UTC Max Alt Time: %s" % tt))
+            print(("UTC Set Time    : %s" % ts))
+            print(("Rise Azimuth: %s" % azr))
+            print(("Set Azimuth : %s" % azs))
+            print(("Max Altitude: %s" % altt))
+            print(("Duration    : %s" % duration))
 
-	# FIND THE CURRENT LOCATION OF ISS
-	iss.compute(site)
-	degrees_per_radian = 180.0 / math.pi
+      # FIND THE CURRENT LOCATION OF ISS
+      iss.compute(site)
+      degrees_per_radian = 180.0 / math.pi
 
-	altDeg = int(iss.alt * degrees_per_radian)
-	azDeg = int(iss.az * degrees_per_radian)
-	iss.compute(ct)
-	if INFO:
-	    print
-	    print("CURRENT LOCATION:")
-	    print("Latitude : %s" % iss.sublat)
-	    print("Longitude: %s" % iss.sublong)
-	    print("Azimuth  : %s" % azDeg)
-	    print("Altitude : %s" % altDeg)
-	
-	# IS ISS VISIBLE NOW
-        if ( altDeg > int(HOR) ):
-	    lcd.backlight(lcd.ON)
-	    lcd.clear()
-	    # IS ISS OVERHEAD (ABOVE 45 DEG) OR JUST VISIBLE (10deg to 45deg)
-            if ( altDeg > int(45) ):	
-	        if INFO:
-		    print "ISS IS OVERHEAD"
-		lcd.message("ISS IS OVERHEAD")
-		flash_display()
-		if (not isQuiet()):
-		    if (altDeg > int(60)):
-		        sound(4)
-		    else:
-			sound(2)
-			sound(2)
-			sound(2)
-	    else:
-	        if INFO:
-		    print "ISS IS VISIBLE"
-                lcd.message("ISS IS VISIBLE")
-                lcd.message("\nDuration:" + str(duration) + "sec")
-                flash_display()
-                if (not isQuiet()):
-                    sound(1)
-                    sound(1)
-                    sound(1)
-	    next_check = 5		    
-
-            # Send to AltAz Pointer
-	    doLED('on')
-
-    	    # Point Servo towards ISS
-    	    # Convert AZ deg to 200 steps
-    	    # Find the difference between current location and new location
-    	    azDiff = azDeg - glob_azOld
-    	    glob_azOld  = azDeg
-    	    steps = int(float(azDiff) * FLOAT_A)
-            doStepper(steps)
-            glob_azReset += steps
-            doServo(altDeg)
+      altDeg = int(iss.alt * degrees_per_radian)
+      azDeg = int(iss.az * degrees_per_radian)
+      iss.compute(ct)
+      if INFO:
+          print()
+          print("CURRENT LOCATION:")
+          print(("Latitude : %s" % iss.sublat))
+          print(("Longitude: %s" % iss.sublong))
+          print(("Azimuth  : %s" % azDeg))
+          print(("Altitude : %s" % altDeg))
+  
+      # IS ISS VISIBLE NOW
+      if ( altDeg > int(HOR) ):
+        if LCD:
+          lcd.backlight(lcd.ON)
+          lcd.clear()
+        # IS ISS OVERHEAD (ABOVE 45 DEG) OR JUST VISIBLE (10deg to 45deg)
+        if ( altDeg > int(45) ):  
+          if INFO:
+            print("ISS IS OVERHEAD")
+          if LCD:
+            lcd.message("ISS IS OVERHEAD")
+            flash_display()
+          if (not isQuiet()):
+            if (altDeg > int(60)):
+              sound(4)
+          else:
+              sound(2)
+              sound(2)
+              sound(2)
         else:
-            if INFO:
-                print "ISS below horizon"
-            doAzReset()
-	    next_visible(tr)
-	    next_check = 60
+          if INFO:
+            print("ISS IS VISIBLE")
+          if LCD:
+            lcd.message("ISS IS VISIBLE")
+            lcd.message("\nDuration:" + str(duration) + "sec")
+            flash_display()
+          if (not isQuiet()):
+              sound(1)
+              sound(1)
+              sound(1)
+          next_check = 5        
 
-        # Turn off LCD backlight during quiet time 
-        # except when ISS visible
-        if not isQuiet():
+          # Send to AltAz Pointer
+          doLED('on')
+
+          # Point Servo towards ISS
+          # Convert AZ deg to 200 steps
+          # Find the difference between current location and new location
+          azDiff = azDeg - glob_azOld
+          glob_azOld  = azDeg
+          steps = int(float(azDiff) * FLOAT_A)
+          doStepper(steps)
+          glob_azReset += steps
+          doServo(altDeg)
+      else:
+          if INFO:
+              print("ISS below horizon")
+          doAzReset()
+          next_visible(tr)
+          next_check = 60
+
+      # Turn off LCD backlight during quiet time 
+      # except when ISS visible
+      if not isQuiet():
+          if LCD:
             lcd.backlight(lcd.ON)
-        else:
+      else:
+          if LCD:
             lcd.backlight(lcd.OFF)
 
-        time.sleep(next_check)
+      time.sleep(next_check)
     # END WHILE
 

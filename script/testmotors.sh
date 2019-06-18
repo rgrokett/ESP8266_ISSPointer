@@ -3,6 +3,7 @@
 # Example Linux cmd-line script to run the ESP8266 HUZZAH with Stepper Motor
 # and Servo
 #
+# Edit the IP address to point to your ESP8266 IP
 # usage:  $ bash ./testmotors.sh
 #
 
