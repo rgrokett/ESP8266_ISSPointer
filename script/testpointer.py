@@ -2,7 +2,7 @@
 # 
 # Example program to simulate a (fast!) flyover
 # 
-# usage: $ python testPointer.py
+# usage: $ python3 testPointer.py
 #
 
 import urllib.request, urllib.error, urllib.parse

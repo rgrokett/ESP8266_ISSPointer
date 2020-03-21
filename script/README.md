@@ -8,7 +8,7 @@ testmotors.sh   -- Test your ESP Pointer. $ sh testmotors.sh
 testpointer.py  -- Test the Pointer using $ python3 testpointer.py
 
 To run in background:
-sudo nohup python ./isspointer.py &
+sudo nohup python3 ./isspointer.py &
 
 
 See the ESP8266_ISSPointer.pdf document for full details

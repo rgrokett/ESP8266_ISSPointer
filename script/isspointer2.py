@@ -25,6 +25,7 @@
 #
 # Version 1.4 2016.01.11 - added extra error handling
 # Version 2.0 2019.06.16 - Python3 update
+# Version 2.1 2020.03.21 - Update LCD libraries
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
 
@@ -69,7 +70,7 @@ LON = -81.8 # Your Longitude (+E) deg
 ELV = 11.0  # Elevation at your location (meters)
 
 # FOR ALT/AZ POINTER 
-STEPIP = "http://192.168.X.X/" # IP Address of YOUR ESP8266 AltAZ Pointer
+STEPIP = "http://192.168.1.71/" # IP Address of YOUR ESP8266 AltAZ Pointer
 STEPS  = 200    # Replace with your stepper (steps per one revolution)
 
 AUDIO = 1 # 0 off 1 on
@@ -113,24 +114,25 @@ def next_visible(risetime): # LCD Display dates/times
         v = dt.strftime('%m/%d %X')
         c = time.strftime('%m/%d %X')
         if LCD:
-          lcd.backlight(lcd.ON)
           lcd.clear()
-          lcd.message("NEXT:" + v)
-          lcd.message("\n")
-          lcd.message("Time:" + c)
+          lcd.color = [100, 0, 0]
+          message = ("NEXT:" + v)
+          message += ("\n")
+          message += ("Time:" + c)
+          lcd.message = message
 
 def flash_display():    # LCD Display flash
-        lcd.backlight(lcd.OFF)
-        time.sleep(0.2)
-        lcd.backlight(lcd.ON)
-        time.sleep(0.2)
-        lcd.backlight(lcd.OFF)
-        time.sleep(0.2)
-        lcd.backlight(lcd.ON)
-        time.sleep(0.2)
-        lcd.backlight(lcd.OFF)
-        time.sleep(0.2)
-        lcd.backlight(lcd.ON)
+        lcd.color = [0, 0, 0]
+        time.sleep(0.4)
+        lcd.color = [100, 0, 0]
+        time.sleep(0.4)
+        lcd.color = [0, 0, 0]
+        time.sleep(0.4)
+        lcd.color = [100, 0, 0]
+        time.sleep(0.4)
+        lcd.color = [0, 0, 0]
+        time.sleep(0.4)
+        lcd.color = [100, 0, 0]
 
 # GET ISS ORBIT DATA
 def getTLE():
@@ -252,7 +254,8 @@ def exit():
     """
     try:
         lcd = Adafruit_CharLCDPlate()
-        lcd.backlight(lcd.OFF)
+        lcd.backlight = False
+        lcd.color = [0, 0, 0]
         clearChars(lcd)
         lcd.stop()
     except:
@@ -270,10 +273,11 @@ if __name__ == '__main__':
     socket.setdefaulttimeout(timeout)
 
     if LCD:
-      #lcd = Adafruit_CharLCDPlate()
       lcd.clear()
-      lcd.backlight(lcd.ON)
-      lcd.message("ISS STARTUP")
+      lcd.backlight = True
+      lcd.color = [100, 0, 0]
+      lcd.message = "ISS STARTUP"
+      lcd.message = "\n LCD version"
       flash_display()
     sound(3)
     time.sleep(3)
@@ -352,14 +356,15 @@ if __name__ == '__main__':
       # IS ISS VISIBLE NOW
       if ( altDeg > int(HOR) ):
         if LCD:
-          lcd.backlight(lcd.ON)
           lcd.clear()
+          lcd.backlight = True
+          lcd.color = [100, 0, 0]
         # IS ISS OVERHEAD (ABOVE 45 DEG) OR JUST VISIBLE (10deg to 45deg)
         if ( altDeg > int(45) ):  
           if INFO:
             print("ISS IS OVERHEAD")
           if LCD:
-            lcd.message("ISS IS OVERHEAD")
+            lcd.message = ("ISS IS OVERHEAD")
             flash_display()
           if (not isQuiet()):
             if (altDeg > int(60)):
@@ -372,8 +377,8 @@ if __name__ == '__main__':
           if INFO:
             print("ISS IS VISIBLE")
           if LCD:
-            lcd.message("ISS IS VISIBLE")
-            lcd.message("\nDuration:" + str(duration) + "sec")
+            lcd.message = ("ISS IS VISIBLE")
+            lcd.message = ("\nDuration:" + str(duration) + "sec")
             flash_display()
           if (not isQuiet()):
               sound(1)
@@ -404,10 +409,12 @@ if __name__ == '__main__':
       # except when ISS visible
       if not isQuiet():
           if LCD:
-            lcd.backlight(lcd.ON)
+            lcd.backlight = True
+            lcd.color = [100, 0, 0]
       else:
           if LCD:
-            lcd.backlight(lcd.OFF)
+            lcd.backlight = False
+            lcd.color = [0, 0, 0]
 
       time.sleep(next_check)
     # END WHILE
