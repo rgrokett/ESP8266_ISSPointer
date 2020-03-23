@@ -212,14 +212,15 @@ if __name__ == '__main__':
     if (next_seconds > (20 * 60)):
         getTLE()    
         pt = ct
-        iss = ephem.readtle(glob_tle[0], glob_tle[1], glob_tle[2]);
-        site = ephem.Observer()
-        site.date = datetime.datetime.utcnow()
-        site.lat = str(LAT)
-        site.lon = str(LON)
-        site.horizon = str(HOR)
-        site.elevation = ELV
-        site.pressure = 0
+
+    iss = ephem.readtle(glob_tle[0], glob_tle[1], glob_tle[2]);
+    site = ephem.Observer()
+    site.date = datetime.datetime.utcnow()
+    site.lat = str(LAT)
+    site.lon = str(LON)
+    site.horizon = str(HOR)
+    site.elevation = ELV
+    site.pressure = 0
 
     lt = ephem.localtime(site.date)
     lt = lt.replace(microsecond=0)
