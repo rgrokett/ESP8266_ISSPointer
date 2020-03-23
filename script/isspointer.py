@@ -221,13 +221,13 @@ if __name__ == '__main__':
         site.elevation = ELV
         site.pressure = 0
 
-        lt = ephem.localtime(site.date)
-        lt = lt.replace(microsecond=0)
-        print("Current UTC time    : %s" % site.date)
-        print("Current Local time  : %s" % lt)
+    lt = ephem.localtime(site.date)
+    lt = lt.replace(microsecond=0)
+    print("Current UTC time    : %s" % site.date)
+    print("Current Local time  : %s" % lt)
 
-        # FIND NEXT PASS INFO JUST FOR REFERENCE
-        tr, azr, tt, altt, ts, azs = site.next_pass(iss)
+    # FIND NEXT PASS INFO JUST FOR REFERENCE
+    tr, azr, tt, altt, ts, azs = site.next_pass(iss)
 
     if (ts > tr):
         duration = int((ts - tr) *60*60*24)
