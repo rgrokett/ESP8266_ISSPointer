@@ -387,35 +387,35 @@ if __name__ == '__main__':
               sound(1)
           next_check = 5        
 
-          # Send to AltAz Pointer
-          doLED('on')
+        # Send to AltAz Pointer
+        doLED('on')
 
-          # Point Servo towards ISS
-          # Convert AZ deg to 200 steps
-          # Find the difference between current location and new location
-          azDiff = azDeg - glob_azOld
-          glob_azOld  = azDeg
-          steps = int(float(azDiff) * FLOAT_A)
-          doStepper(steps)
-          glob_azReset += steps
-          doServo(altDeg)
+        # Point Servo towards ISS
+        # Convert AZ deg to 200 steps
+        # Find the difference between current location and new location
+        azDiff = azDeg - glob_azOld
+        glob_azOld  = azDeg
+        steps = int(float(azDiff) * FLOAT_A)
+        doStepper(steps)
+        glob_azReset += steps
+        doServo(altDeg)
       else:
-          if INFO:
-              print("ISS below horizon")
-          doAzReset()
-          next_visible(tr)
-          next_check = 60
+        if INFO:
+            print("ISS below horizon")
+        doAzReset()
+        next_visible(tr)
+        next_check = 60
 
       # Turn off LCD backlight during quiet time 
       # except when ISS visible
       if not isQuiet():
-          if LCD:
-            lcd.backlight = True
-            lcd.color = [100, 0, 0]
+        if LCD:
+          lcd.backlight = True
+          lcd.color = [100, 0, 0]
       else:
-          if LCD:
-            lcd.backlight = False
-            lcd.color = [0, 0, 0]
+        if LCD:
+          lcd.backlight = False
+          lcd.color = [0, 0, 0]
 
       time.sleep(next_check)
     # END WHILE
