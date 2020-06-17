@@ -323,6 +323,11 @@ if __name__ == '__main__':
     
       # FIND NEXT PASS INFO JUST FOR REFERENCE
       tr, azr, tt, altt, ts, azs = site.next_pass(iss)
+      if DEBUG:
+         print("tr=%s  ts=%s" % (tr,ts))
+
+      if (str(tr) == 'None'):
+        continue
 
       if (ts > tr):
         duration = int((ts - tr) *60*60*24)
