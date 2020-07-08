@@ -74,7 +74,7 @@ STEPIP = "http://192.168.1.71/" # IP Address of YOUR ESP8266 AltAZ Pointer
 STEPS  = 200    # Replace with your stepper (steps per one revolution)
 
 AUDIO = 1 # 0 off 1 on
-QUIET = [ 00, 0o7 ] # Don't play audio between midnight & 7:59AM
+QUIET = [ 00, 07 ] # Don't play audio between midnight & 7:59AM
 PATH = "/home/pi/sounds/"  # Path to Sound files
 
 ########### END OF USER VARIABLES
