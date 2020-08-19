@@ -228,7 +228,13 @@ if __name__ == '__main__':
     print("Current Local time  : %s" % lt)
 
     # FIND NEXT PASS INFO JUST FOR REFERENCE
-    tr, azr, tt, altt, ts, azs = site.next_pass(iss)
+    try:
+        tr, azr, tt, altt, ts, azs = site.next_pass(iss)
+    except Exception as ex:
+        print(ex)
+        time.sleep(20)
+        continue
+
     if DEBUG:
          print("tr=%s  ts=%s" % (tr,ts))
 
