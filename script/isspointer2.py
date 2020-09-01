@@ -381,7 +381,7 @@ if __name__ == '__main__':
           if (not isQuiet()):
             if (altDeg > int(60)):
               sound(4)
-          else:
+            else:
               sound(2)
               sound(2)
               sound(2)
