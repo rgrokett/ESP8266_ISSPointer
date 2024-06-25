@@ -114,8 +114,9 @@ void setup() {
   blink();
 
   // prepare Servo GPIO
-  myservo.attach(SVRO);
+  myservo.attach(SVRO, 544, 2400);
   myservo.write(0);
+  myserver.writeMicroseconds(544);
 }
 
 void loop() {
