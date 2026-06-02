@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.11
 # ISS FLYOVER DETECTION
 # This program is part of the ISSPointer:
 # https://github.com/rgrokett/ESP8266_ISSPointer
@@ -9,22 +9,16 @@
 # Note only passes with altitude angles greater than 10deg will point
 # 
 # Requires:
-# sudo apt-get install python3-pip python3-dev
-# sudo pip3 install pyephem
+# sudo apt-get install python3.11 python3.11-dev python3-pip
+# python3.11 -m pip install ephem
 #
 # Usage:
-# nohup python3 -u ./isspointer.py &
+# nohup python3.11 -u ./isspointer.py &
 #
 # Version 0.7 2016.01.16
 # Version 2.0 2019.06.16 - Python3 update
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
-
-try:
-   import ephem    
-except:
-   print("Requires sudo pip3 install pyephem")
-   exit()
 
 import calendar
 import datetime
@@ -34,6 +28,12 @@ import urllib.request, urllib.error, urllib.parse
 import socket
 import atexit
 import sys
+
+try:
+   import ephem
+except ImportError:
+   print("Requires python3.11 -m pip install ephem")
+   sys.exit(1)
 
 
 ############ USER VARIABLES
@@ -171,7 +171,7 @@ def doAzReset():
     return
 
 
-def exit():
+def cleanup():
     """
     Exit handler, which clears all custom chars and shuts down the display.
     """
@@ -185,7 +185,7 @@ def exit():
 #####
 # MAIN HERE
 if __name__ == '__main__':
-  atexit.register(exit)
+  atexit.register(cleanup)
 
   # timeout in seconds
   timeout = 10
@@ -302,4 +302,3 @@ if __name__ == '__main__':
 
     time.sleep(next_check)
   # END WHILE
-

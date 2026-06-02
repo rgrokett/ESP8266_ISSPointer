@@ -7,6 +7,8 @@
 # usage:  $ bash ./testmotors.sh
 #
 
+set -e
+
 
 # >> CHANGE FOR YOUR ESP8266 IP ADDRESS <<
 ESP_IP="192.168.X.X"
@@ -36,4 +38,3 @@ sleep 2
 
 # Turn Off Motors
 curl http://$ESP_IP/stepper/stop
-

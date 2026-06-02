@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.11
 # 
 # Example program to simulate a (fast!) flyover
 # 
-# usage: $ python3 testPointer.py
+# usage: $ python3.11 testpointer.py
 #
 
 import urllib.request, urllib.error, urllib.parse
@@ -81,7 +81,7 @@ def doServo(angle):
 def doLED(state):
     ledUrl = STEPIP
     try:
-        cmd = ledUrl+"led?"+str(state)
+        cmd = ledUrl+"led/"+str(state)
         resp = urllib.request.urlopen(cmd)
         if DEBUG:
            print(resp.read().decode('utf-8'))
@@ -137,4 +137,3 @@ for az in range(200,40, -5):
 # end for 
 doAzReset()
 print("FINISHED")
-

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.11
 #
 # ISS FLYOVER DETECTION
 # LCD DISPLAY & SOUND VERSION FOR RASPBERRY PI
@@ -17,23 +17,17 @@
 # Install Adafruit LCD lib & dependencies from 
 #    https://github.com/adafruit/Adafruit_Python_CharLCD
 # Also install:
-# $ sudo apt-get install python3-pip python3-dev
-# $ sudo pip3 install pyephem
+# $ sudo apt-get install python3.11 python3.11-dev python3-pip
+# $ python3.11 -m pip install ephem
 #
 # Usage:
-# $ sudo nohup python3 -u ./isspointer.py &
+# $ sudo nohup python3.11 -u ./isspointer.py &
 #
 # Version 1.4 2016.01.11 - added extra error handling
 # Version 2.0 2019.06.16 - Python3 update
 # Version 2.1 2020.03.21 - Update LCD libraries
 #     license: GPLv3, see: www.gnu.org/licenses/gpl-3.0.html
 #
-
-try:
-   import ephem
-except Exception as ex:
-   print("Requires sudo pip3 install pyephem")
-   exit()
 
 import subprocess
 import calendar
@@ -44,6 +38,12 @@ import urllib.request, urllib.error, urllib.parse
 import socket
 import atexit
 import sys
+
+try:
+   import ephem
+except ImportError:
+   print("Requires python3.11 -m pip install ephem")
+   sys.exit(1)
 
 LCD = 0 # Default to no LCD
 try:
@@ -248,17 +248,16 @@ def doAzReset():
     return
 
 
-def exit():
+def cleanup():
     """
     Exit handler, which clears all custom chars and shuts down the display.
     """
     try:
-        lcd = Adafruit_CharLCDPlate()
-        lcd.backlight = False
-        lcd.color = [0, 0, 0]
-        clearChars(lcd)
-        lcd.stop()
-    except:
+        if LCD:
+            lcd.clear()
+            lcd.backlight = False
+            lcd.color = [0, 0, 0]
+    except Exception:
         # avoids ugly KeyboardInterrupt trace on console...
         pass
 
@@ -266,7 +265,7 @@ def exit():
 #####
 # MAIN HERE
 if __name__ == '__main__':
-    atexit.register(exit)
+    atexit.register(cleanup)
 
     # timeout in seconds
     timeout = 10
@@ -430,4 +429,3 @@ if __name__ == '__main__':
 
       time.sleep(next_check)
     # END WHILE
-
